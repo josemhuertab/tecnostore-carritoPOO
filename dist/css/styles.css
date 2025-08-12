@@ -12057,32 +12057,60 @@ body.fade-in {
   box-shadow: 0 6px 12px rgba(0, 191, 166, 0.5);
 }
 
-.carrito-btn {
+button#abrirCarrito.btn.btn-primary.carrito-btn,
+#abrirCarrito.carrito-btn {
   position: fixed !important;
   bottom: 20px !important;
   right: 20px !important;
-  z-index: 1050 !important;
+  z-index: 1055 !important;
   transform: none !important;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: #0d6efd;
-  color: #fff;
-  font-size: 1.5rem;
-  border: none;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  transition: background-color 0.3s, transform 0.2s;
+  border-radius: 50% !important;
+  width: 50px !important;
+  height: 50px !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  background-color: #0d6efd !important;
+  color: #fff !important;
+  font-size: 1.5rem !important;
+  border: none !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
+  transition: background-color 0.3s, transform 0.2s, opacity 0.3s !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  top: auto !important;
+  left: auto !important;
+  float: none !important;
+  clear: none !important;
+  vertical-align: baseline !important;
 }
-.carrito-btn:hover {
-  background-color: rgb(1.762295082, 87.2336065574, 213.237704918);
+button#abrirCarrito.btn.btn-primary.carrito-btn:hover,
+#abrirCarrito.carrito-btn:hover {
+  background-color: rgb(1.762295082, 87.2336065574, 213.237704918) !important;
   transform: scale(1.05) !important;
+  border: none !important;
+  position: fixed !important;
 }
-.carrito-btn:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.5);
+button#abrirCarrito.btn.btn-primary.carrito-btn:focus,
+#abrirCarrito.carrito-btn:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.5) !important;
+  border: none !important;
+  position: fixed !important;
+}
+button#abrirCarrito.btn.btn-primary.carrito-btn:active,
+#abrirCarrito.carrito-btn:active {
+  background-color: rgb(1.5532786885, 76.887295082, 187.9467213115) !important;
+  transform: scale(0.95) !important;
+  border: none !important;
+  position: fixed !important;
+}
+
+body.carrito-abierto button#abrirCarrito.carrito-btn,
+body.carrito-abierto #abrirCarrito.carrito-btn {
+  opacity: 0.3 !important;
+  pointer-events: none !important;
+  transform: translateX(-10px) !important;
 }
 
 .badge-carrito {
@@ -12171,10 +12199,12 @@ body.fade-in {
   .carrito-sidebar {
     width: 260px;
   }
-  .carrito-btn {
-    width: 45px;
-    height: 45px;
-    font-size: 1.3rem;
+  button#abrirCarrito.btn.btn-primary.carrito-btn,
+  #abrirCarrito.carrito-btn {
+    width: 45px !important;
+    height: 45px !important;
+    font-size: 1.3rem !important;
+    position: fixed !important;
   }
 }
 a {

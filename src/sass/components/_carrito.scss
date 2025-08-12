@@ -1,32 +1,63 @@
 // -==== BOTÓN CARRITO ===-
-.carrito-btn {
+// Selector ultra específico para sobrescribir Bootstrap
+button#abrirCarrito.btn.btn-primary.carrito-btn,
+#abrirCarrito.carrito-btn {
   position: fixed !important;
   bottom: 20px !important;
   right: 20px !important;
-  z-index: 1050 !important;
+  z-index: 1055 !important; // Menor que el sidebar (1060) para que quede detrás
   transform: none !important;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: #0d6efd;
-  color: #fff;
-  font-size: 1.5rem;
-  border: none;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-  transition: background-color 0.3s, transform 0.2s;
+  border-radius: 50% !important;
+  width: 50px !important;
+  height: 50px !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  background-color: #0d6efd !important;
+  color: #fff !important;
+  font-size: 1.5rem !important;
+  border: none !important;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+  transition: background-color 0.3s, transform 0.2s, opacity 0.3s !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  top: auto !important;
+  left: auto !important;
+  
+  // Asegurar que no herede estilos problemáticos
+  float: none !important;
+  clear: none !important;
+  vertical-align: baseline !important;
 
   &:hover {
-    background-color: darken(#0d6efd, 10%);
+    background-color: darken(#0d6efd, 10%) !important;
     transform: scale(1.05) !important;
+    border: none !important;
+    position: fixed !important;
   }
 
   &:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(13,110,253,0.5);
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(13,110,253,0.5) !important;
+    border: none !important;
+    position: fixed !important;
   }
+
+  &:active {
+    background-color: darken(#0d6efd, 15%) !important;
+    transform: scale(0.95) !important;
+    border: none !important;
+    position: fixed !important;
+  }
+}
+
+// Ocultar el botón cuando el sidebar esté abierto
+// Usamos una clase en el body que se agrega via JavaScript
+body.carrito-abierto button#abrirCarrito.carrito-btn,
+body.carrito-abierto #abrirCarrito.carrito-btn {
+  opacity: 0.3 !important;
+  pointer-events: none !important;
+  transform: translateX(-10px) !important;
 }
 
 .badge-carrito {
@@ -124,9 +155,11 @@
     width: 260px;
   }
 
-  .carrito-btn {
-    width: 45px;
-    height: 45px;
-    font-size: 1.3rem;
+  button#abrirCarrito.btn.btn-primary.carrito-btn,
+  #abrirCarrito.carrito-btn {
+    width: 45px !important;
+    height: 45px !important;
+    font-size: 1.3rem !important;
+    position: fixed !important;
   }
 }

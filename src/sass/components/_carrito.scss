@@ -28,11 +28,6 @@ button#abrirCarrito.btn.btn-primary.carrito-btn,
   float: none !important;
   clear: none !important;
   vertical-align: baseline !important;
-  
-  // Forzar posición fija en GitHub Pages
-  position: fixed !important;
-  will-change: transform !important;
-  backface-visibility: hidden !important;
 
   &:hover {
     background-color: darken(#0d6efd, 10%) !important;

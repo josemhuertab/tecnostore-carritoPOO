@@ -4,83 +4,95 @@
     "img": "../src/img/productos/audifonos-inalambricos-1.jpg",
     "nombre": "Audífonos Bluetooth",
     "desc": "Audífonos de alta calidad, ideales para actividades al aire libre con conexión inalámbrica.",
-    "precio": "19.990"
+    "precio": "19.990",
+    "stock": 15
   },
   {
     "id": "42518",
     "img": "../src/img/productos/audifonos-compactos.jpg",
     "nombre": "Audífonos Bluetooth Compactos",
     "desc": "Libertad de movimiento con sonido envolvente.",
-    "precio": "24.990"
+    "precio": "24.990",
+    "stock": 8
   },
   {
     "id": "95482",
     "img": "../src/img/productos/mouse-rgb.jpg",
     "nombre": "Mouse RGB",
     "desc": "Mouse con iluminación RGB, perfecto para gaming y trabajo.",
-    "precio": "22.990"
+    "precio": "22.990",
+    "stock": 12
   },
   {
     "id": "13248",
     "img": "../src/img/productos/teclado-rgb-1.jpg",
     "nombre": "Teclado Mecánico RGB",
     "desc": "Teclado mecánico ideal para oficina y gaming con retroiluminación.",
-    "precio": "25.990"
+    "precio": "25.990",
+    "stock": 3
   },
   {
     "id": "68421",
     "img": "../src/img/productos/cargador-inalambrico.jpg",
     "nombre": "Cargador Inalámbrico",
     "desc": "Carga rápida y cómoda para tus dispositivos.",
-    "precio": "14.990"
+    "precio": "14.990",
+    "stock": 0
   },
   {
     "id": "94871",
     "img": "../src/img/productos/drone-compacto.jpg",
     "nombre": "Drone Compacto",
     "desc": "Drone de fotografía aérea fácil de manejar y con buena autonomía.",
-    "precio": "119.990"
+    "precio": "119.990",
+    "stock": 5
   },
   {
     "id": "32457",
     "img": "../src/img/productos/audifonos-inalambricos-2.jpg",
     "nombre": "Audífonos Inalámbricos Pro",
     "desc": "Sonido de alta fidelidad para disfrutar música en cualquier lugar.",
-    "precio": "79.990"
+    "precio": "79.990",
+    "stock": 1
   },
   {
     "id": "64847",
     "img": "../src/img/productos/monitor-full-led-hd.jpg",
     "nombre": "Monitor LED Full HD",
     "desc": "Pantalla con imágenes nítidas y claras para trabajo o entretenimiento.",
-    "precio": "149.990"
+    "precio": "149.990",
+    "stock": 7
   },
   {
     "id": "14935",
     "img": "../src/img/productos/mouse-rgb-inalambrico.jpg",
     "nombre": "Mouse Inalámbrico",
     "desc": "Precisión y comodidad para tus tareas diarias.",
-    "precio": "19.990"
+    "precio": "19.990",
+    "stock": 20
   },
   {
     "id": "14847",
     "img": "../src/img/productos/tablet.jpg",
     "nombre": "Tablet 10 pulgadas",
     "desc": "Ideal para estudiar, trabajar o entretenerse en cualquier lugar.",
-    "precio": "87.990"
+    "precio": "87.990",
+    "stock": 2
   },
   {
     "id": "96148",
     "img": "../src/img/productos/auriculares-gaming.jpg",
     "nombre": "Auriculares Gaming",
     "desc": "Sumérgete en tus juegos con sonido envolvente y micrófono integrado.",
-    "precio": "59.990"
+    "precio": "59.990",
+    "stock": 9
   },
   {
     "id": "36485",
     "img": "../src/img/productos/camara-web-hd.jpg",
     "nombre": "Cámara Web HD",
     "desc": "Videollamadas con calidad de imagen clara y nítida.",
-    "precio": "29.990"
+    "precio": "29.990",
+    "stock": 14
   }
 ]

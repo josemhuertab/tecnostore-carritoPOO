@@ -12083,6 +12083,9 @@ button#abrirCarrito.btn.btn-primary.carrito-btn,
   float: none !important;
   clear: none !important;
   vertical-align: baseline !important;
+  position: fixed !important;
+  will-change: transform !important;
+  backface-visibility: hidden !important;
 }
 button#abrirCarrito.btn.btn-primary.carrito-btn:hover,
 #abrirCarrito.carrito-btn:hover {

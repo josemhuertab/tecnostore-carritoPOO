@@ -1,6 +1,6 @@
 # 🛒 TechGadget Store
 
-TechGadget Store es una tienda online especializada en productos tecnológicos de última generación. La plataforma ofrece una experiencia de compra completa con un catálogo diverso que incluye smartphones, laptops, tablets, auriculares, smartwatches y accesorios tecnológicos.
+TechGadget Store es una tienda online especializada en productos tecnológicos de última generación. La plataforma ofrece una experiencia de compra completa con un catálogo diverso que incluye mouse, teclados, monitores y accesorios tecnológicos.
 
 ## 🎯 Descripción del Proyecto
 
@@ -26,6 +26,14 @@ Desarrollado como trabajo final de módulo del curso Frontend Trainee 2025.
 ✅ **Cálculo automático de totales** con validación de stock  
 ✅ **Persistencia en localStorage** para mantener el carrito entre sesiones  
 ✅ **Sidebar flotante** con animaciones suaves y diseño intuitivo  
+✅ **Botón flotante fijo** que permanece visible durante el scroll
+
+### 🔐 Sistema de Autenticación y Administración
+✅ **Sistema de login** con validación de credenciales  
+✅ **Panel de administrador** con acceso restringido  
+✅ **Gestión de sesiones** con localStorage/sessionStorage  
+✅ **Verificación automática** de permisos de administrador  
+✅ **Navegación condicional** según tipo de usuario  
 
 ### 🎨 Experiencia de Usuario
 ✅ **Diseño responsivo** optimizado para móviles, tablets y desktop  
@@ -44,22 +52,27 @@ Desarrollado como trabajo final de módulo del curso Frontend Trainee 2025.
 
 ## 📂 Estructura del proyecto
 
-techgadget-store/
+tecnostore-carritoPOO/
 │
 ├── dist/
 │ ├── css/
-│ │ ├── style.css
-│ │ └── style.css.map
+│ │ ├── admin.css
+│ │ ├── styles.css
+│ │ └── styles.css.map
 │ └── js/
+│ ├── admin.js
+│ ├── auth.js
+│ ├── carrito-poo.js
+│ ├── scripts-poo.js
 │ └── scripts.js
 │
 ├── node_modules/
 │
 ├── pages/
-│ ├── index.html
-│ ├── products.html
-│ ├── contact.html
-│ └── faq.html
+│ ├── admin.html
+│ ├── contacto.html
+│ ├── home.html
+│ └── productos.html
 │
 ├── src/
 │ ├── data/
@@ -76,11 +89,12 @@ techgadget-store/
 │  ├── base/
 │  ├── components/
 │  ├── layout/
+│  ├── main.scss
 │  ├── pages/
 │  └── themes/
 │
 ├── .gitignore
-├── index.html (Login simulado)
+├── index.html (Página de login)
 ├── package-lock.json
 ├── package.json
 └── README.md
@@ -200,14 +214,68 @@ class GestorCarrito {
 
 2. **Accede a la aplicación**
    - Abre `http://localhost:8000` en tu navegador
-   - Navega a `pages/index.html` para comenzar
+   - La página principal (`index.html`) es el sistema de login
+   - Para acceso de administrador, usa: `admin@correo.cl` / `admin123`
 
 ### 🎮 Funcionalidades a Probar
 - ✅ **Navegación**: Explora las diferentes páginas (Home, Productos, Contacto)
 - ✅ **Carrito POO**: Agrega/elimina productos y observa la persistencia
+- ✅ **Sistema de Login**: Prueba el acceso con credenciales de administrador
+- ✅ **Panel de Administrador**: Accede a funcionalidades administrativas
 - ✅ **Modo Oscuro**: Usa el toggle en el navbar
 - ✅ **Responsive**: Prueba en diferentes tamaños de pantalla
 - ✅ **Formularios**: Completa los formularios de contacto y suscripción
+
+---
+
+## 🔐 Sistema de Autenticación y Credenciales
+
+### 👤 Credenciales de Administrador
+Para acceder al panel de administrador, utiliza las siguientes credenciales:
+
+- **Email**: `admin@correo.cl`
+- **Contraseña**: `admin123`
+
+### 🔑 Funcionamiento del Sistema de Login
+
+#### Inicialización Automática
+Al cargar la página de login (`index.html`), el sistema automáticamente:
+1. **Verifica usuarios existentes** en localStorage
+2. **Crea el usuario administrador** si no existe previamente
+3. **Guarda las credenciales** de forma segura en el almacenamiento local
+
+#### Proceso de Autenticación
+1. **Validación de formulario**: Verifica que los campos no estén vacíos
+2. **Búsqueda de usuario**: Compara email y contraseña con los datos almacenados
+3. **Creación de sesión**: Si las credenciales son válidas, guarda la sesión del usuario
+4. **Redirección automática**: Lleva al usuario a la página principal (`pages/home.html`)
+
+#### Gestión de Sesiones
+- **Persistencia**: La sesión se mantiene en localStorage/sessionStorage
+- **Verificación automática**: Al cargar cualquier página, se verifica si hay una sesión activa
+- **Permisos de administrador**: Se verifica la propiedad `esAdmin` para mostrar opciones administrativas
+- **Cierre de sesión**: Limpia completamente los datos de sesión
+
+#### Características de Seguridad
+- **Validación de entrada**: Previene campos vacíos y datos inválidos
+- **Gestión de errores**: Muestra mensajes claros en caso de credenciales incorrectas
+- **Protección de rutas**: Verifica permisos antes de mostrar contenido administrativo
+- **Limpieza de sesión**: Elimina todos los datos al cerrar sesión
+
+### 🛡️ Panel de Administrador
+Una vez autenticado como administrador, tendrás acceso a:
+- **Enlace "Administrador"** visible en la navegación principal
+- **Página de administración** con funcionalidades exclusivas
+- **Gestión de productos** y configuraciones del sistema
+- **Estadísticas y reportes** de la tienda
+
+### 🔄 Flujo de Usuario Completo
+1. **Acceso inicial**: Visita `index.html` para el login
+2. **Autenticación**: Ingresa las credenciales de administrador
+3. **Redirección**: Automáticamente se redirige a `pages/home.html`
+4. **Navegación**: El enlace "Administrador" aparece en el menú superior
+5. **Administración**: Accede al panel desde el enlace en la navegación
+6. **Cierre de sesión**: Usa el botón "Cerrar Sesión" para salir
 
 ---
 

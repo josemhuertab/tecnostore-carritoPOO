@@ -31,7 +31,7 @@ function validarPassword(password) {
 
 // Inicializar usuarios de prueba
 function inicializarUsuariosPrueba() {
-  const usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
+  let usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
   
   if (usuarios.length === 0) {
     const usuariosPrueba = [
@@ -58,8 +58,24 @@ function inicializarUsuariosPrueba() {
       }
     ];
     
-    localStorage.setItem('usuarios', JSON.stringify(usuariosPrueba));
+    usuarios = usuariosPrueba;
   }
+  
+  // Verificar si existe el administrador, si no, agregarlo
+  const adminExiste = usuarios.find(u => u.email === 'admin@correo.cl');
+  if (!adminExiste) {
+    const adminUser = {
+      id: usuarios.length + 1,
+      nombre: 'Administrador',
+      apellido: 'Sistema',
+      email: 'admin@correo.cl',
+      password: '123456',
+      esAdmin: true
+    };
+    usuarios.push(adminUser);
+  }
+  
+  localStorage.setItem('usuarios', JSON.stringify(usuarios));
 }
 
 // Función para verificar sesión existente
@@ -139,7 +155,8 @@ document.addEventListener('DOMContentLoaded', function() {
           nombre: usuario.nombre,
           apellido: usuario.apellido,
           email: usuario.email,
-          fechaLogin: new Date().toISOString()
+          fechaLogin: new Date().toISOString(),
+          esAdmin: usuario.esAdmin || false
         };
         
         // Guardar sesión

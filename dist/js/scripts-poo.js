@@ -175,6 +175,16 @@ document.addEventListener("DOMContentLoaded", async function () {
       if (logoutBtn) {
         logoutBtn.style.display = 'inline-block';
       }
+      
+      // Mostrar enlace del administrador solo si es admin
+      const adminNavItem = document.getElementById('adminNavItem');
+      if (adminNavItem) {
+        if (usuario.esAdmin) {
+          adminNavItem.style.display = 'block';
+        } else {
+          adminNavItem.style.display = 'none';
+        }
+      }
     } else {
       // Ocultar botón de cerrar sesión si no hay sesión
       if (logoutBtn) {
@@ -424,26 +434,91 @@ document.addEventListener("DOMContentLoaded", async function () {
       return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     }
 
+    // Función para filtrar productos con filtros avanzados
     function filtrarProductos(terminoBusqueda) {
+      const filtroCategoria = document.getElementById('filtroCategoria')?.value || '';
+      const filtroPrecioMin = document.getElementById('filtroPrecioMin')?.value;
+      const filtroPrecioMax = document.getElementById('filtroPrecioMax')?.value;
+      
+      const filtros = {
+        texto: terminoBusqueda || '',
+        categoria: filtroCategoria,
+        precioMin: filtroPrecioMin ? Number(filtroPrecioMin) : null,
+        precioMax: filtroPrecioMax ? Number(filtroPrecioMax) : null
+      };
+      
       const todosLosProductos = carritoGlobal.getProductos();
       
-      if (!terminoBusqueda) {
+      if (!terminoBusqueda && !filtroCategoria && !filtroPrecioMin && !filtroPrecioMax) {
         productosFiltrados = todosLosProductos;
       } else {
-        const terminoNormalizado = removeAccents(terminoBusqueda.toLowerCase());
-
         productosFiltrados = todosLosProductos.filter((producto) => {
-          const nombreNormalizado = removeAccents(producto.getNombre().toLowerCase());
-          const descNormalizada = removeAccents(producto.getDescripcion().toLowerCase());
-
-          return (
-            nombreNormalizado.includes(terminoNormalizado) ||
-            descNormalizada.includes(terminoNormalizado)
-          );
+          let cumpleFiltros = true;
+          
+          // Filtro por texto
+          if (terminoBusqueda) {
+            const terminoNormalizado = removeAccents(terminoBusqueda.toLowerCase());
+            const nombreNormalizado = removeAccents(producto.getNombre().toLowerCase());
+            const descNormalizada = removeAccents(producto.getDescripcion().toLowerCase());
+            
+            cumpleFiltros = cumpleFiltros && (
+              nombreNormalizado.includes(terminoNormalizado) ||
+              descNormalizada.includes(terminoNormalizado)
+            );
+          }
+          
+          // Filtro por categoría
+          if (filtroCategoria) {
+            cumpleFiltros = cumpleFiltros && producto.getCategoria() === filtroCategoria;
+          }
+          
+          // Filtro por precio mínimo
+          if (filtroPrecioMin) {
+            cumpleFiltros = cumpleFiltros && producto.getPrecio() >= Number(filtroPrecioMin);
+          }
+          
+          // Filtro por precio máximo
+          if (filtroPrecioMax) {
+            cumpleFiltros = cumpleFiltros && producto.getPrecio() <= Number(filtroPrecioMax);
+          }
+          
+          return cumpleFiltros;
         });
       }
       actualizarPaginacion(productosFiltrados);
       mostrarProductosEnGrid(productosFiltrados, 1);
+    }
+
+    // Función para cargar categorías en el filtro
+    function cargarCategoriasEnFiltro() {
+      const selectCategoria = document.getElementById('filtroCategoria');
+      if (!selectCategoria) return;
+      
+      const categorias = carritoGlobal.obtenerCategorias();
+      
+      // Limpiar opciones existentes (excepto la primera)
+      selectCategoria.innerHTML = '<option value="">Todas las categorías</option>';
+      
+      categorias.forEach(categoria => {
+        const option = document.createElement('option');
+        option.value = categoria;
+        option.textContent = categoria;
+        selectCategoria.appendChild(option);
+      });
+    }
+
+    // Función para limpiar todos los filtros
+    function limpiarFiltros() {
+      document.getElementById('filtroProductos').value = '';
+      const filtroCategoria = document.getElementById('filtroCategoria');
+      const filtroPrecioMin = document.getElementById('filtroPrecioMin');
+      const filtroPrecioMax = document.getElementById('filtroPrecioMax');
+      
+      if (filtroCategoria) filtroCategoria.value = '';
+      if (filtroPrecioMin) filtroPrecioMin.value = '';
+      if (filtroPrecioMax) filtroPrecioMax.value = '';
+      
+      filtrarProductos('');
     }
 
     // Carga inicial de productos
@@ -451,6 +526,9 @@ document.addEventListener("DOMContentLoaded", async function () {
     productosFiltrados = todosLosProductos;
     mostrarProductosEnGrid(todosLosProductos, 1);
     actualizarPaginacion(todosLosProductos);
+    
+    // Cargar categorías en el filtro
+    cargarCategoriasEnFiltro();
 
     // Eventos de paginación
     pagina1Btn?.addEventListener("click", () => {
@@ -465,11 +543,34 @@ document.addEventListener("DOMContentLoaded", async function () {
       pagina1Btn.classList.remove("active");
     });
 
-    // Evento para el filtro
+    // Evento para el filtro de texto
     filtroInput?.addEventListener("input", (e) => {
       const termino = e.target.value;
       filtrarProductos(termino);
     });
+    
+    // Eventos para filtros avanzados
+    const filtroCategoria = document.getElementById('filtroCategoria');
+    const filtroPrecioMin = document.getElementById('filtroPrecioMin');
+    const filtroPrecioMax = document.getElementById('filtroPrecioMax');
+    const limpiarFiltrosBtn = document.getElementById('limpiarFiltros');
+    
+    filtroCategoria?.addEventListener('change', () => {
+      const termino = filtroInput?.value || '';
+      filtrarProductos(termino);
+    });
+    
+    filtroPrecioMin?.addEventListener('input', () => {
+      const termino = filtroInput?.value || '';
+      filtrarProductos(termino);
+    });
+    
+    filtroPrecioMax?.addEventListener('input', () => {
+      const termino = filtroInput?.value || '';
+      filtrarProductos(termino);
+    });
+    
+    limpiarFiltrosBtn?.addEventListener('click', limpiarFiltros);
   }
 
   // === MODO OSCURO ===
@@ -511,6 +612,49 @@ document.addEventListener("DOMContentLoaded", async function () {
   // Llamar actualizarNotificacionCarrito al cargar la página
   actualizarNotificacionCarrito();
 });
+
+// === FUNCIÓN GLOBAL PARA LIMPIAR FILTROS (ACCESIBLE DESDE HTML) ===
+window.limpiarFiltros = function() {
+  document.getElementById('filtroProductos').value = '';
+  const filtroCategoria = document.getElementById('filtroCategoria');
+  const filtroPrecioMin = document.getElementById('filtroPrecioMin');
+  const filtroPrecioMax = document.getElementById('filtroPrecioMax');
+  
+  if (filtroCategoria) filtroCategoria.value = '';
+  if (filtroPrecioMin) filtroPrecioMin.value = '';
+  if (filtroPrecioMax) filtroPrecioMax.value = '';
+  
+  // Recargar todos los productos
+  const filtroInput = document.getElementById('filtroProductos');
+  if (filtroInput) {
+    const event = new Event('input');
+    filtroInput.dispatchEvent(event);
+  }
+};
+
+// === FUNCIÓN GLOBAL PARA LIMPIAR FILTROS ===
+function limpiarFiltros() {
+  document.getElementById('filtroProductos').value = '';
+  const filtroCategoria = document.getElementById('filtroCategoria');
+  const filtroPrecioMin = document.getElementById('filtroPrecioMin');
+  const filtroPrecioMax = document.getElementById('filtroPrecioMax');
+  
+  if (filtroCategoria) filtroCategoria.value = '';
+  if (filtroPrecioMin) filtroPrecioMin.value = '';
+  if (filtroPrecioMax) filtroPrecioMax.value = '';
+  
+  // Recargar todos los productos
+  const productosGrid = document.getElementById("productosGrid");
+  if (productosGrid) {
+    const todosLosProductos = carritoGlobal.getProductos();
+    // Simular el filtrado con término vacío
+    const event = new Event('input');
+    const filtroInput = document.getElementById('filtroProductos');
+    if (filtroInput) {
+      filtroInput.dispatchEvent(event);
+    }
+  }
+}
 
 // === FUNCIÓN GLOBAL PARA AGREGAR PRODUCTO AL CARRITO ===
 function agregarAlCarrito(idProducto) {

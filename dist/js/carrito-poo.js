@@ -1,4 +1,4 @@
-// === CLASES POO PARA EL CARRITO DE COMPRAS ===
+// === CLASES POO PARA EL CARRITO DE COMPRAS - ES6 ===
 
 class Producto {
     #id;
@@ -8,8 +8,10 @@ class Producto {
     #stock;
     #imagen;
     #descripcion;
+    #categoria;
+    #etiquetas;
 
-    constructor(id, nombre, precio, cantidad, imagen = "", descripcion = "") {
+    constructor(id, nombre, precio, cantidad, imagen = "", descripcion = "", categoria = "", etiquetas = []) {
         this.#id = id;
         this.#nombre = nombre;
         this.#precio = precio;
@@ -17,6 +19,8 @@ class Producto {
         this.#stock = 0;
         this.#imagen = imagen;
         this.#descripcion = descripcion;
+        this.#categoria = categoria;
+        this.#etiquetas = Array.isArray(etiquetas) ? etiquetas : [];
     }
 
     // Getters
@@ -27,6 +31,8 @@ class Producto {
     getStock() { return this.#stock; }
     getImagen() { return this.#imagen; }
     getDescripcion() { return this.#descripcion; }
+    getCategoria() { return this.#categoria; }
+    getEtiquetas() { return [...this.#etiquetas]; }
 
     // Setters
     setStock(nuevoStock) {
@@ -69,6 +75,31 @@ class Producto {
         if (typeof nuevaDescripcion === "string") this.#descripcion = nuevaDescripcion.trim();
     }
 
+    setCategoria(nuevaCategoria) {
+        if (typeof nuevaCategoria === "string") this.#categoria = nuevaCategoria.trim();
+    }
+
+    setEtiquetas(nuevasEtiquetas) {
+        if (Array.isArray(nuevasEtiquetas)) {
+            this.#etiquetas = nuevasEtiquetas.filter(etiqueta => 
+                typeof etiqueta === "string" && etiqueta.trim() !== ""
+            ).map(etiqueta => etiqueta.trim());
+        }
+    }
+
+    agregarEtiqueta(etiqueta) {
+        if (typeof etiqueta === "string" && etiqueta.trim() !== "" && !this.#etiquetas.includes(etiqueta.trim())) {
+            this.#etiquetas.push(etiqueta.trim());
+        }
+    }
+
+    eliminarEtiqueta(etiqueta) {
+        const index = this.#etiquetas.indexOf(etiqueta);
+        if (index > -1) {
+            this.#etiquetas.splice(index, 1);
+        }
+    }
+
     // Métodos para manejo de stock
     estaAgotado() {
         return this.#stock === 0;
@@ -103,6 +134,46 @@ class Producto {
             return `Solo quedan ${this.#stock} unidades`;
         }
         return "";
+    }
+
+    // Métodos de búsqueda y filtrado
+    coincideConTexto(texto) {
+        if (!texto || typeof texto !== "string") return true;
+        
+        const textoNormalizado = this.#normalizarTexto(texto);
+        const nombre = this.#normalizarTexto(this.#nombre);
+        const descripcion = this.#normalizarTexto(this.#descripcion);
+        const categoria = this.#normalizarTexto(this.#categoria);
+        const etiquetas = this.#etiquetas.map(etiqueta => this.#normalizarTexto(etiqueta)).join(" ");
+        
+        return nombre.includes(textoNormalizado) ||
+               descripcion.includes(textoNormalizado) ||
+               categoria.includes(textoNormalizado) ||
+               etiquetas.includes(textoNormalizado);
+    }
+
+    coincideConCategoria(categoria) {
+        if (!categoria || typeof categoria !== "string") return true;
+        return this.#normalizarTexto(this.#categoria) === this.#normalizarTexto(categoria);
+    }
+
+    coincideConRangoPrecio(precioMin, precioMax) {
+        const precio = Number(this.#precio);
+        if (precioMin !== null && precio < precioMin) return false;
+        if (precioMax !== null && precio > precioMax) return false;
+        return true;
+    }
+
+    tieneEtiqueta(etiqueta) {
+        if (!etiqueta || typeof etiqueta !== "string") return false;
+        return this.#etiquetas.some(e => this.#normalizarTexto(e) === this.#normalizarTexto(etiqueta));
+    }
+
+    #normalizarTexto(texto) {
+        return texto.toLowerCase()
+                   .normalize("NFD")
+                   .replace(/[\u0300-\u036f]/g, "")
+                   .trim();
     }
 
     getClaseStock() {
@@ -172,20 +243,33 @@ class CarritoCompras {
         this.#productos = new Map();
     }
 
-    // Cargar productos desde JSON
+    // Cargar productos desde localStorage o JSON
     async cargarProductos() {
+        // Intentar cargar desde localStorage primero
+        if (this.cargarProductosDesdeLocalStorage()) {
+            console.log("Productos cargados desde localStorage");
+            return true;
+        }
+        
+        // Si no hay datos en localStorage, cargar desde JSON
         try {
             const response = await fetch("../src/data/productos.json");
             const productosData = await response.json();
             
             productosData.forEach(prodData => {
+                // Generar categorías y etiquetas basadas en el nombre y descripción
+                const categoria = this.#determinarCategoria(prodData.nombre, prodData.desc);
+                const etiquetas = this.#generarEtiquetas(prodData.nombre, prodData.desc, categoria);
+                
                 const producto = new Producto(
                     prodData.id,
                     prodData.nombre,
                     parseInt(prodData.precio.replace(/\./g, "")),
                     1,
                     prodData.img,
-                    prodData.desc
+                    prodData.desc,
+                    categoria,
+                    etiquetas
                 );
                 
                 // Asignar stock desde JSON o aleatorio
@@ -194,6 +278,10 @@ class CarritoCompras {
                 
                 this.#productos.set(prodData.id, producto);
             });
+            
+            // Guardar en localStorage para futuras cargas
+            this.#guardarProductosEnLocalStorage();
+            console.log("Productos cargados desde JSON y guardados en localStorage");
             
             return true;
         } catch (error) {
@@ -226,12 +314,133 @@ class CarritoCompras {
         return 5; // Valor por defecto
     }
 
+    // Métodos auxiliares para categorización automática
+    #determinarCategoria(nombre, descripcion) {
+        const texto = (nombre + " " + descripcion).toLowerCase();
+        
+        // Todos los audífonos van a la categoría Audio
+        if (texto.includes("audifonos") || texto.includes("audífonos") || 
+            texto.includes("auriculares") || texto.includes("headphones") ||
+            texto.includes("earbuds") || texto.includes("headset")) return "Audio";
+        if (texto.includes("mouse") || texto.includes("teclado")) return "Periféricos";
+        if (texto.includes("monitor") || texto.includes("pantalla")) return "Monitores";
+        if (texto.includes("tablet")) return "Tablets";
+        if (texto.includes("drone")) return "Drones";
+        if (texto.includes("cargador")) return "Accesorios";
+        if (texto.includes("camara") || texto.includes("cámara")) return "Cámaras";
+        
+        return "Tecnología";
+    }
+
+    #generarEtiquetas(nombre, descripcion, categoria) {
+        const etiquetas = new Set();
+        const texto = (nombre + " " + descripcion).toLowerCase();
+        
+        // Etiquetas por características
+        if (texto.includes("inalambrico") || texto.includes("inalámbrico") || texto.includes("bluetooth")) {
+            etiquetas.add("Inalámbrico");
+        }
+        if (texto.includes("rgb")) etiquetas.add("RGB");
+        if (texto.includes("gaming")) etiquetas.add("Gaming");
+        if (texto.includes("hd") || texto.includes("full hd")) etiquetas.add("HD");
+        if (texto.includes("compacto")) etiquetas.add("Compacto");
+        if (texto.includes("pro")) etiquetas.add("Pro");
+        if (texto.includes("mecanico") || texto.includes("mecánico")) etiquetas.add("Mecánico");
+        if (texto.includes("rapida") || texto.includes("rápida")) etiquetas.add("Carga Rápida");
+        
+        // Agregar categoría como etiqueta
+        etiquetas.add(categoria);
+        
+        return Array.from(etiquetas);
+    }
+
     getProductos() {
         return Array.from(this.#productos.values());
     }
 
     getProductoPorId(id) {
         return this.#productos.get(id);
+    }
+
+    // Métodos de filtrado avanzado
+    filtrarProductos(filtros = {}) {
+        const { texto, categoria, precioMin, precioMax, etiqueta } = filtros;
+        
+        return this.getProductos().filter(producto => {
+            return producto.coincideConTexto(texto) &&
+                   producto.coincideConCategoria(categoria) &&
+                   producto.coincideConRangoPrecio(precioMin, precioMax) &&
+                   (etiqueta ? producto.tieneEtiqueta(etiqueta) : true);
+        });
+    }
+
+    buscarPorNombre(nombre) {
+        if (!nombre || typeof nombre !== "string") return this.getProductos();
+        
+        return this.getProductos().filter(producto => 
+            producto.getNombre().toLowerCase().includes(nombre.toLowerCase())
+        );
+    }
+
+    buscarPorDescripcion(descripcion) {
+        if (!descripcion || typeof descripcion !== "string") return this.getProductos();
+        
+        return this.getProductos().filter(producto => 
+            producto.getDescripcion().toLowerCase().includes(descripcion.toLowerCase())
+        );
+    }
+
+    buscarPorCategoria(categoria) {
+        if (!categoria || typeof categoria !== "string") return this.getProductos();
+        
+        return this.getProductos().filter(producto => 
+            producto.coincideConCategoria(categoria)
+        );
+    }
+
+    buscarPorEtiqueta(etiqueta) {
+        if (!etiqueta || typeof etiqueta !== "string") return this.getProductos();
+        
+        return this.getProductos().filter(producto => 
+            producto.tieneEtiqueta(etiqueta)
+        );
+    }
+
+    buscarPorRangoPrecio(precioMin, precioMax) {
+        return this.getProductos().filter(producto => 
+            producto.coincideConRangoPrecio(precioMin, precioMax)
+        );
+    }
+
+    obtenerCategorias() {
+        const categorias = new Set();
+        this.getProductos().forEach(producto => {
+            if (producto.getCategoria()) {
+                categorias.add(producto.getCategoria());
+            }
+        });
+        return Array.from(categorias).sort();
+    }
+
+    obtenerEtiquetas() {
+        const etiquetas = new Set();
+        this.getProductos().forEach(producto => {
+            producto.getEtiquetas().forEach(etiqueta => {
+                etiquetas.add(etiqueta);
+            });
+        });
+        return Array.from(etiquetas).sort();
+    }
+
+    obtenerRangoPrecio() {
+        const productos = this.getProductos();
+        if (productos.length === 0) return { min: 0, max: 0 };
+        
+        const precios = productos.map(p => Number(p.getPrecio()));
+        return {
+            min: Math.min(...precios),
+            max: Math.max(...precios)
+        };
     }
 
     agregarProducto(idProducto, cantidad = 1) {
@@ -352,6 +561,138 @@ class CarritoCompras {
             cantidad: item.getCantidad()
         }));
         localStorage.setItem("carritoPOO", JSON.stringify(carritoData));
+    }
+
+    // Métodos para administrador de inventario
+    crearProducto(datosProducto) {
+        const { nombre, descripcion, precio, categoria, etiquetas, stock, imagen } = datosProducto;
+        
+        // Validaciones
+        if (!nombre || !descripcion || !precio) {
+            throw new Error("Nombre, descripción y precio son obligatorios");
+        }
+        
+        if (Number(precio) <= 0) {
+            throw new Error("El precio debe ser mayor que cero");
+        }
+        
+        if (Number(stock) < 0) {
+            throw new Error("El stock no puede ser negativo");
+        }
+        
+        // Generar ID único
+        const id = this.#generarIdUnico();
+        
+        const producto = new Producto(
+            id,
+            nombre,
+            Number(precio),
+            1,
+            imagen || "",
+            descripcion,
+            categoria || "Tecnología",
+            Array.isArray(etiquetas) ? etiquetas : []
+        );
+        
+        producto.setStock(Number(stock) || 0);
+        this.#productos.set(id, producto);
+        this.#guardarProductosEnLocalStorage();
+        
+        return producto;
+    }
+
+    actualizarProducto(id, datosActualizados) {
+        const producto = this.#productos.get(id);
+        if (!producto) {
+            throw new Error("Producto no encontrado");
+        }
+        
+        const { nombre, descripcion, precio, categoria, etiquetas, stock, imagen } = datosActualizados;
+        
+        // Actualizar solo los campos proporcionados
+        if (nombre !== undefined) producto.setNombre(nombre);
+        if (descripcion !== undefined) producto.setDescripcion(descripcion);
+        if (precio !== undefined) producto.setPrecio(Number(precio));
+        if (categoria !== undefined) producto.setCategoria(categoria);
+        if (etiquetas !== undefined) producto.setEtiquetas(etiquetas);
+        if (stock !== undefined) producto.setStock(Number(stock));
+        if (imagen !== undefined) producto.setImagen(imagen);
+        
+        this.#guardarProductosEnLocalStorage();
+        return producto;
+    }
+
+    eliminarProductoDelInventario(id) {
+        if (!this.#productos.has(id)) {
+            throw new Error("Producto no encontrado");
+        }
+        
+        // Eliminar del carrito si existe
+        const index = this.#items.findIndex(item => 
+            item.getProducto().getId() === id
+        );
+        if (index !== -1) {
+            this.#items.splice(index, 1);
+            this.guardarEnLocalStorage();
+        }
+        
+        // Eliminar de la lista de productos
+        const eliminado = this.#productos.delete(id);
+        this.#guardarProductosEnLocalStorage();
+        
+        return eliminado;
+    }
+
+    #generarIdUnico() {
+        let id;
+        do {
+            id = Math.floor(Math.random() * 100000).toString();
+        } while (this.#productos.has(id));
+        return id;
+    }
+
+    #guardarProductosEnLocalStorage() {
+        const productosArray = Array.from(this.#productos.values()).map(producto => ({
+            id: producto.getId(),
+            nombre: producto.getNombre(),
+            desc: producto.getDescripcion(),
+            precio: producto.getPrecio().toString(),
+            categoria: producto.getCategoria(),
+            etiquetas: producto.getEtiquetas(),
+            stock: producto.getStock(),
+            img: producto.getImagen()
+        }));
+        
+        localStorage.setItem("productosInventario", JSON.stringify(productosArray));
+    }
+
+    cargarProductosDesdeLocalStorage() {
+        const productosGuardados = localStorage.getItem("productosInventario");
+        if (productosGuardados) {
+            try {
+                const productosArray = JSON.parse(productosGuardados);
+                productosArray.forEach(prodData => {
+                    const producto = new Producto(
+                        prodData.id,
+                        prodData.nombre,
+                        Number(prodData.precio),
+                        1,
+                        prodData.img || "",
+                        prodData.desc,
+                        prodData.categoria || "Tecnología",
+                        prodData.etiquetas || []
+                    );
+                    
+                    producto.setStock(prodData.stock || 0);
+                    this.#productos.set(prodData.id, producto);
+                });
+                return true;
+            } catch (error) {
+                console.error("Error al cargar productos desde localStorage:", error);
+                return false;
+            }
+        }
+        return false;
     }
 
     cargarDesdeLocalStorage() {

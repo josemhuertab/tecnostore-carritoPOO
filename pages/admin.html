@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TechGadget Store | Administrador de Inventario</title>
+  <!-- Estilos compilados -->
+  <link rel="stylesheet" href="../dist/css/styles.css" />
+  <!-- Estilos del administrador -->
+  <link rel="stylesheet" href="../dist/css/admin.css" />
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Scripts POO -->
+  <script src="../dist/js/carrito-poo.js"></script>
+  <script src="../dist/js/admin.js"></script>
+</head>
+
+<body>
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container">
+      <a class="navbar-brand" href="productos.html">TechGadget Store</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a href="home.html" class="nav-link">Inicio</a>
+          </li>
+          <li class="nav-item">
+            <a href="productos.html" class="nav-link">Productos</a>
+          </li>
+          <li class="nav-item">
+            <a href="admin.html" class="nav-link active">Administrador</a>
+          </li>
+          <li class="nav-item">
+            <a href="contacto.html" class="nav-link">Contacto</a>
+          </li>
+          <li class="nav-item">
+            <button id="logoutBtn" class="btn btn-outline-danger btn-sm ms-2" style="display: none;">Cerrar Sesión</button>
+          </li>
+        </ul>
+        <button id="darkModeToggle" class="btn btn-sm btn-outline-secondary ms-2">
+          🌙
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===== CONTENIDO PRINCIPAL ===== -->
+  <main class="container my-5">
+    <div class="row">
+      <div class="col-12">
+        <h1 class="text-center mb-4">Administrador de Inventario</h1>
+        
+        <!-- Botones de acción -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h2>Gestión de Productos</h2>
+          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalProducto" onclick="abrirModalCrear()">
+            <i class="bi bi-plus-circle"></i> Nuevo Producto
+          </button>
+        </div>
+
+        <!-- Filtros -->
+    <div class="card mb-4 filtros-admin">
+          <div class="card-header">
+            <h5 class="mb-0">Filtros de Búsqueda</h5>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label for="filtroTexto" class="form-label">Buscar por texto</label>
+                <input type="text" class="form-control" id="filtroTexto" placeholder="Nombre, descripción, categoría...">
+              </div>
+              <div class="col-md-3">
+                <label for="filtroCategoria" class="form-label">Categoría</label>
+                <select class="form-select" id="filtroCategoria">
+                  <option value="">Todas las categorías</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label for="filtroPrecioMin" class="form-label">Precio mínimo</label>
+                <input type="number" class="form-control" id="filtroPrecioMin" placeholder="0">
+              </div>
+              <div class="col-md-2">
+                <label for="filtroPrecioMax" class="form-label">Precio máximo</label>
+                <input type="number" class="form-control" id="filtroPrecioMax" placeholder="999999">
+              </div>
+            </div>
+            <div class="row mt-3">
+              <div class="col-12">
+                <button class="btn btn-outline-secondary" onclick="limpiarFiltros()">
+                  <i class="bi bi-x-circle"></i> Limpiar Filtros
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabla de productos -->
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">Listado de Productos</h5>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-striped table-hover table-admin">
+                <thead class="table-dark">
+                  <tr>
+                    <th>ID</th>
+                    <th>Imagen</th>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Categoría</th>
+                    <th>Precio</th>
+                    <th>Stock</th>
+                    <th>Etiquetas</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="tablaProductos">
+                  <!-- Los productos se cargarán dinámicamente -->
+                </tbody>
+              </table>
+            </div>
+            <div id="mensajeSinProductos" class="text-center text-muted py-4" style="display: none;">
+              <i class="bi bi-inbox fs-1"></i>
+              <p class="mt-2">No se encontraron productos que coincidan con los filtros.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===== MODAL PRODUCTO ===== -->
+  <div class="modal fade" id="modalProducto" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalProductoTitulo">Nuevo Producto</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="formProducto">
+            <input type="hidden" id="productoId">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="productoNombre" class="form-label">Nombre *</label>
+                <input type="text" class="form-control" id="productoNombre" required>
+              </div>
+              <div class="col-md-6">
+                <label for="productoCategoria" class="form-label">Categoría *</label>
+                <select class="form-select" id="productoCategoria" required>
+                  <option value="">Seleccionar categoría</option>
+                  <option value="Audio">Audio</option>
+                  <option value="Periféricos">Periféricos</option>
+                  <option value="Monitores">Monitores</option>
+                  <option value="Tablets">Tablets</option>
+                  <option value="Drones">Drones</option>
+                  <option value="Accesorios">Accesorios</option>
+                  <option value="Cámaras">Cámaras</option>
+                  <option value="Tecnología">Tecnología</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <label for="productoDescripcion" class="form-label">Descripción *</label>
+                <textarea class="form-control" id="productoDescripcion" rows="3" required></textarea>
+              </div>
+              <div class="col-md-6">
+                <label for="productoPrecio" class="form-label">Precio *</label>
+                <input type="number" class="form-control" id="productoPrecio" min="1" required>
+              </div>
+              <div class="col-md-6">
+                <label for="productoStock" class="form-label">Stock *</label>
+                <input type="number" class="form-control" id="productoStock" min="0" required>
+              </div>
+              <div class="col-12">
+                <label for="productoImagen" class="form-label">URL de Imagen</label>
+                <input type="text" class="form-control" id="productoImagen" placeholder="../src/img/productos/producto.jpg o https://ejemplo.com/imagen.jpg">
+              </div>
+              <div class="col-12">
+                <label for="productoEtiquetas" class="form-label">Etiquetas</label>
+                <input type="text" class="form-control" id="productoEtiquetas" placeholder="Separar con comas: Gaming, RGB, Inalámbrico">
+                <div class="form-text">Separe las etiquetas con comas</div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" onclick="guardarProducto()">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL CONFIRMACIÓN ELIMINAR ===== -->
+  <div class="modal fade" id="modalEliminar" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirmar Eliminación</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p>¿Está seguro de que desea eliminar este producto?</p>
+          <p><strong id="productoEliminarNombre"></strong></p>
+          <p class="text-muted">Esta acción no se puede deshacer.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-danger" onclick="confirmarEliminar()">Eliminar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Footer ===== -->
+  <footer class="footer mt-5">
+    <div class="container">
+      <h5>TechGadget Store</h5>
+      <p>
+        Tu tienda de tecnología de confianza con lo último en gadgets y
+        accesorios de calidad.
+      </p>
+      <p class="mb-2">Email: contacto@techgadgetstore.com | Tel: +56 9 1234 5678</p>
+    </div>
+    <div class="d-flex justify-content-center gap-3 fs-1 mb-2">
+      <a href="#"><i class="bi bi-facebook" style="font-size: 30px;"></i></a>
+      <a href="#"><i class="bi bi-instagram" style="font-size: 30px;"></i></a>
+      <a href="#"><i class="bi bi-twitter-x" style="font-size: 30px;"></i></a>
+      <a href="#"><i class="bi bi-youtube" style="font-size: 30px;"></i></a>
+    </div>
+    <div class="footer__bottom">
+      © 2025 TechGadget Store. Todos los derechos reservados.
+    </div>
+  </footer>
+
+</body>
+</html>

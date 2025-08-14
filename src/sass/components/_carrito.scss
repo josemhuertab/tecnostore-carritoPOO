@@ -5,7 +5,7 @@ button#abrirCarrito.btn.btn-primary.carrito-btn,
   position: fixed !important;
   bottom: 20px !important;
   right: 20px !important;
-  z-index: 1055 !important; // Menor que el sidebar (1060) para que quede detrás
+  z-index: 9999 !important; // Z-index muy alto para estar siempre visible
   transform: none !important;
   border-radius: 50% !important;
   width: 50px !important;
@@ -29,10 +29,14 @@ button#abrirCarrito.btn.btn-primary.carrito-btn,
   clear: none !important;
   vertical-align: baseline !important;
   
-  // Forzar posición fija en GitHub Pages
+  // Forzar posición fija y evitar interferencias
   position: fixed !important;
   will-change: transform !important;
   backface-visibility: hidden !important;
+  
+  // Asegurar que no sea afectado por contenedores padre
+  contain: layout style paint !important;
+  isolation: isolate !important;
 
   &:hover {
     background-color: darken(#0d6efd, 10%) !important;

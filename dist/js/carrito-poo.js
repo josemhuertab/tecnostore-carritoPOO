@@ -243,7 +243,9 @@ class CarritoCompras {
         this.#productos = new Map();
     }
 
-    // Cargar productos desde localStorage o JSON
+    // === FUNCIONES ASÍNCRONAS PARA GESTIÓN DE INVENTARIO ===
+    
+    // Cargar productos desde localStorage o JSON de forma asíncrona
     async cargarProductos() {
         // Intentar cargar desde localStorage primero
         if (this.cargarProductosDesdeLocalStorage()) {
@@ -251,10 +253,19 @@ class CarritoCompras {
             return true;
         }
         
-        // Si no hay datos en localStorage, cargar desde JSON
+        // Si no hay datos en localStorage, cargar desde JSON usando fetch()
         try {
+            console.log("Cargando productos desde JSON de forma asíncrona...");
             const response = await fetch("../src/data/productos.json");
+            
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+            }
+            
             const productosData = await response.json();
+            
+            // Simular tiempo de carga del servidor
+            await this.#simularTiempoServidor(500, 1000);
             
             productosData.forEach(prodData => {
                 // Generar categorías y etiquetas basadas en el nombre y descripción
@@ -285,9 +296,15 @@ class CarritoCompras {
             
             return true;
         } catch (error) {
-            console.error("Error al cargar productos:", error);
-            return false;
+            console.error("Error al cargar productos de forma asíncrona:", error);
+            throw new Error(`No se pudieron cargar los productos: ${error.message}`);
         }
+    }
+    
+    // Función auxiliar para simular tiempo de respuesta del servidor
+    async #simularTiempoServidor(minMs = 300, maxMs = 800) {
+        const tiempoEspera = Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
+        return new Promise(resolve => setTimeout(resolve, tiempoEspera));
     }
 
     generarStockAleatorio() {
@@ -529,6 +546,228 @@ class CarritoCompras {
         return this.#items.reduce((total, item) => total + item.getSubtotal(), 0);
     }
 
+    // Verificación asíncrona de stock con manejo de errores
+    async verificarStockAsincrono(idProducto, cantidadSolicitada) {
+        try {
+            console.log(`Verificando stock para producto ${idProducto}...`);
+            
+            // Simular verificación en servidor
+            await this.#simularTiempoServidor(200, 500);
+            
+            const producto = this.#productos.get(idProducto);
+            if (!producto) {
+                throw new Error(`Producto con ID ${idProducto} no encontrado`);
+            }
+            
+            // Verificar si el producto está agotado
+            if (producto.estaAgotado()) {
+                const error = new Error(`El producto "${producto.getNombre()}" está completamente agotado`);
+                error.tipo = 'PRODUCTO_AGOTADO';
+                error.producto = producto;
+                throw error;
+            }
+            
+            // Verificar si hay suficiente stock
+            if (!producto.puedeAgregarCantidad(cantidadSolicitada)) {
+                const error = new Error(`Stock insuficiente para "${producto.getNombre()}". Stock disponible: ${producto.getStock()}, solicitado: ${cantidadSolicitada}`);
+                error.tipo = 'STOCK_INSUFICIENTE';
+                error.producto = producto;
+                error.stockDisponible = producto.getStock();
+                error.cantidadSolicitada = cantidadSolicitada;
+                throw error;
+            }
+            
+            console.log(`Stock verificado correctamente para ${producto.getNombre()}`);
+            return {
+                valido: true,
+                producto: producto,
+                stockDisponible: producto.getStock(),
+                mensaje: `Stock disponible: ${producto.getStock()} unidades`
+            };
+            
+        } catch (error) {
+            console.error('Error en verificación asíncrona de stock:', error.message);
+            throw error;
+        }
+    }
+    
+    // Actualización asíncrona de stock simulando operación en servidor
+    async actualizarStockAsincrono(idProducto, cantidadReducir, datosCompra = {}) {
+        try {
+            console.log(`Actualizando stock en servidor para producto ${idProducto}...`);
+            
+            // Simular operación en servidor con tiempo variable
+            await this.#simularTiempoServidor(800, 1500);
+            
+            const producto = this.#productos.get(idProducto);
+            if (!producto) {
+                throw new Error(`Producto con ID ${idProducto} no encontrado`);
+            }
+            
+            const stockAnterior = producto.getStock();
+            
+            // Simular posibles errores del servidor (5% de probabilidad)
+            if (Math.random() < 0.05) {
+                throw new Error('Error temporal del servidor. Intente nuevamente.');
+            }
+            
+            // Actualizar stock
+            if (!producto.reducirStock(cantidadReducir)) {
+                throw new Error(`No se pudo reducir el stock. Stock actual: ${producto.getStock()}`);
+            }
+            
+            const stockNuevo = producto.getStock();
+            
+            // Guardar cambios en localStorage
+            this.#guardarProductosEnLocalStorage();
+            
+            console.log(`Stock actualizado: ${stockAnterior} → ${stockNuevo}`);
+            
+            // Si el stock está bajo, notificar al responsable
+            if (producto.stockBajo() || producto.estaAgotado()) {
+                await this.notificarResponsableStock(producto, datosCompra);
+            }
+            
+            return {
+                exito: true,
+                producto: producto,
+                stockAnterior: stockAnterior,
+                stockNuevo: stockNuevo,
+                mensaje: `Stock actualizado correctamente. Nuevo stock: ${stockNuevo}`
+            };
+            
+        } catch (error) {
+            console.error('Error en actualización asíncrona de stock:', error.message);
+            throw error;
+        }
+    }
+    
+    // Simulación de notificación por correo al responsable
+    async notificarResponsableStock(producto, datosCompra = {}) {
+        try {
+            console.log(`Enviando notificación por correo para ${producto.getNombre()}...`);
+            
+            // Simular tiempo de envío de correo
+            await this.#simularTiempoServidor(1000, 2000);
+            
+            // Simular posibles errores de envío (3% de probabilidad)
+            if (Math.random() < 0.03) {
+                throw new Error('Error al enviar notificación por correo');
+            }
+            
+            const tipoNotificacion = producto.estaAgotado() ? 'AGOTADO' : 'STOCK_BAJO';
+            const asunto = producto.estaAgotado() 
+                ? `🚨 PRODUCTO AGOTADO: ${producto.getNombre()}`
+                : `⚠️ STOCK BAJO: ${producto.getNombre()}`;
+            
+            const mensaje = {
+                para: 'responsable@techgadgetstore.com',
+                asunto: asunto,
+                cuerpo: `
+                    Estimado responsable de inventario,
+                    
+                    ${producto.estaAgotado() 
+                        ? `El producto "${producto.getNombre()}" se ha AGOTADO completamente.`
+                        : `El producto "${producto.getNombre()}" tiene stock bajo (${producto.getStock()} unidades).`
+                    }
+                    
+                    Detalles del producto:
+                    - ID: ${producto.getId()}
+                    - Nombre: ${producto.getNombre()}
+                    - Categoría: ${producto.getCategoria()}
+                    - Stock actual: ${producto.getStock()}
+                    - Precio: $${producto.getPrecio().toLocaleString()}
+                    
+                    ${datosCompra.cliente ? `Última compra realizada por: ${datosCompra.cliente}` : ''}
+                    ${datosCompra.fecha ? `Fecha: ${datosCompra.fecha}` : ''}
+                    
+                    Se recomienda reabastecer el inventario lo antes posible.
+                    
+                    Saludos,
+                    Sistema de Gestión de Inventario
+                    TechGadget Store
+                `,
+                fecha: new Date().toISOString(),
+                tipo: tipoNotificacion
+            };
+            
+            // Simular envío exitoso
+            console.log('📧 Notificación enviada:', mensaje);
+            
+            return {
+                exito: true,
+                mensaje: 'Notificación enviada correctamente',
+                detalles: mensaje
+            };
+            
+        } catch (error) {
+            console.error('Error al enviar notificación por correo:', error.message);
+            // No lanzar error para no interrumpir el flujo de compra
+            return {
+                exito: false,
+                mensaje: `Error al enviar notificación: ${error.message}`
+            };
+        }
+    }
+    
+    // Proceso de compra asíncrono mejorado
+    async procesarCompraAsincrona(datosCompra = {}) {
+        if (this.#items.length === 0) {
+            throw new Error("El carrito está vacío");
+        }
+
+        try {
+            console.log('Iniciando proceso de compra asíncrono...');
+            
+            // 1. Verificar stock de todos los productos de forma asíncrona
+            console.log('Verificando stock de todos los productos...');
+            for (const item of this.#items) {
+                await this.verificarStockAsincrono(item.getProducto().getId(), item.getCantidad());
+            }
+            
+            // 2. Actualizar stock de todos los productos
+            console.log('Actualizando stock en servidor...');
+            const resultadosActualizacion = [];
+            
+            for (const item of this.#items) {
+                const resultado = await this.actualizarStockAsincrono(
+                    item.getProducto().getId(), 
+                    item.getCantidad(),
+                    datosCompra
+                );
+                resultadosActualizacion.push(resultado);
+            }
+            
+            // 3. Vaciar carrito
+            this.vaciarCarrito();
+            
+            console.log('Compra procesada exitosamente');
+            
+            return {
+                exito: true,
+                mensaje: 'Compra procesada correctamente',
+                detalles: resultadosActualizacion
+            };
+            
+        } catch (error) {
+            console.error('Error en proceso de compra asíncrono:', error.message);
+            
+            // Mostrar mensaje de error específico según el tipo
+            let mensajeError = 'Error al procesar la compra';
+            
+            if (error.tipo === 'PRODUCTO_AGOTADO') {
+                mensajeError = `❌ ${error.message}`;
+            } else if (error.tipo === 'STOCK_INSUFICIENTE') {
+                mensajeError = `⚠️ ${error.message}`;
+            } else {
+                mensajeError = `🚫 Error del sistema: ${error.message}`;
+            }
+            
+            throw new Error(mensajeError);
+        }
+    }
+
+    // Método original mantenido para compatibilidad
     procesarCompra() {
         if (this.#items.length === 0) {
             alert("El carrito está vacío");

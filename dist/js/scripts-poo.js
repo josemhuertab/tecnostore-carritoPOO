@@ -336,19 +336,76 @@ document.addEventListener("DOMContentLoaded", async function () {
   // === EVENTO PARA VACIAR CARRITO ===
   document.getElementById('vaciarCarritoBtn')?.addEventListener('click', vaciarCarrito);
 
-  formularioPedido?.addEventListener("submit", (e) => {
+  formularioPedido?.addEventListener("submit", async (e) => {
     e.preventDefault();
     
-    // Procesar la compra usando POO
-    if (carritoGlobal.procesarCompra()) {
-      alert(
-        "¡Pedido realizado exitosamente! Te daremos seguimiento a través de tu correo. Si tienes dudas o consultas adicionales, no dudes en contactarnos."
-      );
-      formularioPedido.reset();
-      formularioPedidoContainer.style.display = "none";
+    // Obtener datos del formulario
+    const datosCompra = {
+      cliente: document.getElementById('nombrePedido')?.value || 'Cliente Anónimo',
+      email: document.getElementById('emailPedido')?.value || '',
+      celular: document.getElementById('celularPedido')?.value || '',
+      direccion: document.getElementById('direccionPedido')?.value || '',
+      ciudad: document.getElementById('ciudadPedido')?.value || '',
+      codigoPostal: document.getElementById('codigoPostalPedido')?.value || '',
+      instrucciones: document.getElementById('instruccionesPedido')?.value || '',
+      fecha: new Date().toISOString()
+    };
+    
+    // Deshabilitar el botón de envío para evitar múltiples envíos
+    const submitBtn = formularioPedido.querySelector('button[type="submit"]');
+    const textoOriginal = submitBtn?.textContent || 'Confirmar Pedido';
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Procesando...';
+    }
+    
+    try {
+      // Procesar la compra usando funciones asíncronas
+      const resultado = await carritoGlobal.procesarCompraAsincrona(datosCompra);
+      
+      if (resultado.exito) {
+        // Mostrar mensaje de éxito con detalles
+        let mensajeExito = '🎉 ¡Pedido realizado exitosamente!\n\n';
+        mensajeExito += `Estimado/a ${datosCompra.cliente},\n\n`;
+        mensajeExito += 'Tu pedido ha sido procesado correctamente. ';
+        mensajeExito += 'Te daremos seguimiento a través de tu correo electrónico.\n\n';
+        
+        if (resultado.detalles && resultado.detalles.length > 0) {
+          mensajeExito += 'Productos procesados:\n';
+          resultado.detalles.forEach(detalle => {
+            if (detalle.producto) {
+              mensajeExito += `• ${detalle.producto.getNombre()} - Stock actualizado\n`;
+            }
+          });
+        }
+        
+        mensajeExito += '\nSi tienes dudas o consultas adicionales, no dudes en contactarnos.';
+        
+        alert(mensajeExito);
+        
+        // Limpiar formulario y cerrar
+        formularioPedido.reset();
+        formularioPedidoContainer.style.display = "none";
+        cargarCarrito();
+        actualizarVisualizacionProductos();
+        cerrarCarrito();
+      }
+      
+    } catch (error) {
+      // Mostrar mensaje de error específico
+      console.error('Error al procesar compra:', error);
+      alert(`❌ Error al procesar el pedido:\n\n${error.message}\n\nPor favor, verifica tu carrito e intenta nuevamente.`);
+      
+      // Recargar carrito para mostrar estado actualizado
       cargarCarrito();
       actualizarVisualizacionProductos();
-      cerrarCarrito();
+      
+    } finally {
+      // Rehabilitar el botón de envío
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = textoOriginal;
+      }
     }
   });
 
@@ -657,41 +714,87 @@ function limpiarFiltros() {
 }
 
 // === FUNCIÓN GLOBAL PARA AGREGAR PRODUCTO AL CARRITO ===
-function agregarAlCarrito(idProducto) {
+async function agregarAlCarrito(idProducto) {
   const producto = carritoGlobal.getProductoPorId(idProducto);
   if (!producto) return;
   
+  // Verificar si el producto está agotado antes de continuar
   if (producto.estaAgotado()) {
-    alert("Este producto está agotado");
+    alert("❌ Este producto está agotado y no se puede agregar al carrito.");
     return;
   }
   
-  let cantidad = prompt("¿Cuántas unidades deseas agregar?", "1");
-  cantidad = parseInt(cantidad);
+  // Encontrar el botón que se presionó para mostrar estado de carga
+  const boton = document.querySelector(`button[data-id="${idProducto}"]`);
+  const textoOriginal = boton?.textContent || 'Comprar';
   
-  if (isNaN(cantidad) || cantidad <= 0) {
-    alert("Cantidad inválida.");
-    return;
-  }
-  
-  if (carritoGlobal.agregarProducto(idProducto, cantidad)) {
-    // Encontrar el botón que se presionó
-    const boton = document.querySelector(`button[data-id="${idProducto}"]`);
+  try {
+    // Verificar stock de forma asíncrona
     if (boton) {
-      const textoOriginal = boton.textContent;
-      boton.textContent = "Agregado";
+      boton.textContent = "Verificando...";
       boton.disabled = true;
-      setTimeout(() => {
-        boton.textContent = textoOriginal;
-        boton.disabled = false;
-      }, 1500);
     }
     
-    // Actualizar carrito si está abierto
-    if (carritoSidebar && carritoSidebar.classList.contains("abierto")) {
-      cargarCarrito();
+    let cantidad = prompt("¿Cuántas unidades deseas agregar?", "1");
+    cantidad = parseInt(cantidad);
+    
+    if (isNaN(cantidad) || cantidad <= 0) {
+      alert("❌ Cantidad inválida. Por favor ingresa un número válido.");
+      return;
     }
-    actualizarNotificacionCarrito();
-    actualizarVisualizacionProductos();
+    
+    try {
+      // Verificar que la cantidad solicitada esté disponible
+      const resultadoStock = await carritoGlobal.verificarStockAsincrono(idProducto, cantidad);
+      
+      if (!resultadoStock.valido) {
+        alert("❌ Error en verificación de stock");
+        return;
+      }
+    } catch (error) {
+      if (error.tipo === 'PRODUCTO_AGOTADO') {
+        alert(`❌ ${error.message}`);
+      } else if (error.tipo === 'STOCK_INSUFICIENTE') {
+        alert(`❌ ${error.message}`);
+      } else {
+        alert(`❌ Error al verificar stock: ${error.message}`);
+      }
+      return;
+    }
+    
+    if (carritoGlobal.agregarProducto(idProducto, cantidad)) {
+      // Mostrar confirmación de agregado
+      if (boton) {
+        boton.textContent = "✓ Agregado";
+        boton.style.backgroundColor = "#28a745";
+        setTimeout(() => {
+          boton.textContent = textoOriginal;
+          boton.disabled = false;
+          boton.style.backgroundColor = "";
+        }, 1500);
+      }
+      
+      // Actualizar carrito si está abierto
+      if (carritoSidebar && carritoSidebar.classList.contains("abierto")) {
+        cargarCarrito();
+      }
+      actualizarNotificacionCarrito();
+      actualizarVisualizacionProductos();
+      
+      // Mostrar mensaje de confirmación
+      console.log(`✓ Producto "${producto.getNombre()}" agregado al carrito (${cantidad} unidades)`);
+    }
+    
+  } catch (error) {
+    console.error('Error al agregar producto al carrito:', error);
+    alert(`❌ Error al agregar el producto: ${error.message}`);
+    
+  } finally {
+    // Restaurar botón en caso de error
+    if (boton && boton.disabled) {
+      boton.textContent = textoOriginal;
+      boton.disabled = false;
+      boton.style.backgroundColor = "";
+    }
   }
 }

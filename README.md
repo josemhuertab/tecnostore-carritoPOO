@@ -26,7 +26,9 @@ Desarrollado como trabajo final de módulo del curso Frontend Trainee 2025.
 ✅ **Cálculo automático de totales** con validación de stock  
 ✅ **Persistencia en localStorage** para mantener el carrito entre sesiones  
 ✅ **Sidebar flotante** con animaciones suaves y diseño intuitivo  
-✅ **Botón flotante fijo** que permanece visible durante el scroll
+✅ **Botón flotante fijo** que permanece visible durante el scroll  
+✅ **Operaciones asíncronas** - verificación de stock y procesamiento de compras  
+✅ **Manejo de errores robusto** - validaciones en tiempo real y feedback inmediato
 
 ### 🔐 Sistema de Autenticación y Administración
 ✅ **Sistema de login** con validación de credenciales  
@@ -46,6 +48,8 @@ Desarrollado como trabajo final de módulo del curso Frontend Trainee 2025.
 ✅ **SASS modular** con arquitectura 7-1 para estilos organizados  
 ✅ **Bootstrap 5** para componentes y grid system  
 ✅ **JavaScript ES6+** con clases, módulos y programación funcional  
+✅ **Programación asíncrona** con async/await y manejo de promesas  
+✅ **Fetch API** para simulación de comunicación servidor-cliente  
 ✅ **Código documentado** y comentado para facilitar el mantenimiento
 
 ---
@@ -173,6 +177,79 @@ class GestorCarrito {
 - **Reutilización**: Clases pueden ser utilizadas en otros proyectos
 - **Testabilidad**: Cada clase puede ser probada independientemente
 - **Legibilidad**: Código autodocumentado y comprensible
+
+---
+
+## ⚡ Funcionalidades Asíncronas Avanzadas
+
+El sistema incorpora operaciones asíncronas modernas para simular un entorno de e-commerce real con comunicación servidor-cliente:
+
+### 🔄 Carga Asíncrona de Productos
+✅ **Fetch API** - Carga dinámica de productos desde JSON usando `fetch()`  
+✅ **Manejo de errores** - Gestión robusta de fallos de red y datos corruptos  
+✅ **Fallback inteligente** - Sistema de respaldo con datos locales si falla la carga  
+✅ **Indicadores de carga** - Feedback visual durante las operaciones asíncronas  
+
+### 📦 Verificación Asíncrona de Stock
+```javascript
+async verificarStockAsincrono(idProducto, cantidadSolicitada) {
+    // Simula verificación en servidor remoto
+    // Maneja productos agotados y stock insuficiente
+    // Retorna información detallada del estado
+}
+```
+✅ **Validación en tiempo real** - Verifica disponibilidad antes de agregar al carrito  
+✅ **Simulación de latencia** - Emula tiempos de respuesta de servidor real  
+✅ **Manejo de excepciones** - Diferentes tipos de error (agotado, insuficiente, sistema)  
+✅ **Feedback inmediato** - Mensajes específicos según el tipo de error  
+
+### 🔄 Actualización Asíncrona de Inventario
+```javascript
+async actualizarStockAsincrono(idProducto, cantidadReducir, datosCompra) {
+    // Simula actualización en base de datos remota
+    // Incluye validaciones y notificaciones automáticas
+    // Maneja errores de conectividad
+}
+```
+✅ **Persistencia simulada** - Emula operaciones de base de datos  
+✅ **Transacciones atómicas** - Garantiza consistencia de datos  
+✅ **Notificaciones automáticas** - Alerta cuando el stock es bajo  
+✅ **Rollback en errores** - Revierte cambios si falla la operación  
+
+### 📧 Sistema de Notificaciones Asíncronas
+```javascript
+async notificarResponsableStock(producto, stockRestante, datosCompra) {
+    // Simula envío de emails a responsables
+    // Incluye información detallada de la transacción
+    // Maneja fallos de servicio de correo
+}
+```
+✅ **Emails automáticos** - Notifica a responsables cuando el stock es crítico  
+✅ **Información contextual** - Incluye detalles del producto y compra  
+✅ **Manejo de fallos** - Continúa el proceso aunque falle la notificación  
+✅ **Logs detallados** - Registro completo para auditoría  
+
+### 🛒 Proceso de Compra Asíncrono Integrado
+```javascript
+async procesarCompraAsincrona(datosCompra) {
+    // Orquesta todo el flujo de compra asíncrono
+    // 1. Verifica stock de todos los productos
+    // 2. Actualiza inventario en "servidor"
+    // 3. Envía notificaciones si es necesario
+    // 4. Maneja errores y rollbacks
+}
+```
+✅ **Flujo completo** - Integra todas las operaciones asíncronas  
+✅ **Manejo de errores robusto** - Diferentes estrategias según el tipo de fallo  
+✅ **UI responsiva** - Botones deshabilitados y mensajes de estado  
+✅ **Experiencia fluida** - Feedback continuo al usuario durante el proceso  
+
+### 🎯 Beneficios de la Implementación Asíncrona
+- **Experiencia realista**: Simula comportamiento de aplicaciones de producción
+- **Manejo de errores**: Preparado para fallos de red y servidor
+- **Escalabilidad**: Arquitectura lista para integración con APIs reales
+- **Performance**: Operaciones no bloqueantes que mantienen la UI responsiva
+- **Mantenibilidad**: Código modular y fácil de extender
 
 ---
 
